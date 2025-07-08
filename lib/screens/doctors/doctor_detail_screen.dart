@@ -43,7 +43,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dr. ${widget.doctor.fullName}'),
+        title: Text('Dr. ${widget.doctor.name}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -65,19 +65,10 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      backgroundImage: widget.doctor.profileImage != null
-                          ? NetworkImage(widget.doctor.profileImage!)
-                          : null,
-                      child: widget.doctor.profileImage == null
-                          ? Text(
-                              widget.doctor.firstName[0] + widget.doctor.lastName[0],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                              ),
-                            )
-                          : null,
+                      child: Text(
+                        widget.doctor.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -88,114 +79,26 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Dr. ${widget.doctor.fullName}',
+                                  'Dr. ${widget.doctor.name}',
                                   style: Theme.of(context).textTheme.headlineSmall,
                                 ),
                               ),
-                              if (widget.doctor.isVerified)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.verified,
-                                        size: 16,
-                                        color: Colors.green,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Verified',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            widget.doctor.specialtyText,
+                            widget.doctor.specializations.join(', '),
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${widget.doctor.experienceYears} years experience',
+                            '${widget.doctor.experience} years experience',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Rating and Stats
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.doctor.rating.toStringAsFixed(1),
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '${widget.doctor.reviewCount} reviews',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.doctor.hospitalName,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          if (widget.doctor.city != null)
-                            Text(
-                              widget.doctor.city!,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -228,32 +131,6 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            if (widget.doctor.isAvailableForInClinic) ...[
-              Expanded(
-                child: CustomButton(
-                  text: 'Book In-Clinic\nAED ${widget.doctor.consultationFee.toStringAsFixed(0)}',
-                  onPressed: () => _bookAppointment(false),
-                  isOutlined: true,
-                ),
-              ),
-            ],
-            if (widget.doctor.isAvailableForInClinic && widget.doctor.isAvailableForVideo)
-              const SizedBox(width: 12),
-            if (widget.doctor.isAvailableForVideo) ...[
-              Expanded(
-                child: CustomButton(
-                  text: 'Video Consultation\nAED ${widget.doctor.videoConsultationFee.toStringAsFixed(0)}',
-                  onPressed: () => _bookAppointment(true),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 
@@ -263,25 +140,12 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.doctor.bio != null) ...[
-            Text(
-              'About',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.doctor.bio!,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 24),
-          ],
-          
           Text(
-            'Qualifications',
+            'About',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          ...widget.doctor.qualifications.map((qualification) => Padding(
+          ...widget.doctor.education.map((qualification) => Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
@@ -319,56 +183,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
             )).toList(),
           ),
           const SizedBox(height: 24),
-          
-          Text(
-            'Consultation Fees',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          if (widget.doctor.isAvailableForInClinic)
-            _buildFeeCard(
-              'In-Clinic Consultation',
-              widget.doctor.consultationFee,
-              Icons.local_hospital,
-            ),
-          if (widget.doctor.isAvailableForVideo)
-            _buildFeeCard(
-              'Video Consultation',
-              widget.doctor.videoConsultationFee,
-              Icons.videocam,
-            ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFeeCard(String title, double fee, IconData icon) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            Text(
-              'AED ${fee.toStringAsFixed(0)}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -464,55 +279,22 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          ...widget.doctor.availableDays.map((day) {
-            final timeSlots = widget.doctor.timeSlots[day] ?? [];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      day.toUpperCase(),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (timeSlots.isNotEmpty)
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: timeSlots.map((timeSlot) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            timeSlot,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        )).toList(),
-                      )
-                    else
-                      Text(
-                        'No available slots',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                  ],
-                ),
+          if (widget.doctor.availableSlots.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.doctor.availableSlots.map((day) => Chip(
+                label: Text(day),
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              )).toList(),
+            )
+          else
+            Text(
+              'No available slots',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
-            );
-          }),
+            ),
         ],
       ),
     );

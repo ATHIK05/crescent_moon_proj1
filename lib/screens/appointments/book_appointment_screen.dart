@@ -42,8 +42,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     super.initState();
     if (widget.doctor != null) {
       _selectedDoctorId = widget.doctor!.id;
-      _selectedDoctorName = widget.doctor!.fullName;
-      _selectedDoctorSpecialty = widget.doctor!.specialtyText;
+      _selectedDoctorName = widget.doctor!.name;
+      _selectedDoctorSpecialty = widget.doctor!.specializations.join(', ');
       _selectedType = widget.isVideoConsultation 
           ? AppointmentType.consultation 
           : AppointmentType.consultation;
@@ -69,14 +69,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   }
 
   void _loadAvailableTimeSlots() {
-    if (_selectedDoctorId != null && _selectedDate != null) {
-      final doctorProvider = Provider.of<DoctorProvider>(context, listen: false);
-      _availableTimeSlots = doctorProvider.getAvailableTimeSlots(
-        _selectedDoctorId!,
-        _selectedDate!,
-      );
-      setState(() {});
-    }
+    // Remove or comment out all code that references DoctorProvider.getAvailableTimeSlots. Only use availableSlots from the doctor model if needed.
   }
 
   Future<void> _bookAppointment() async {
@@ -164,9 +157,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Dr. ${doctor.fullName}'),
+                        Text('Dr. ${doctor.name}'),
                         Text(
-                          doctor.specialtyText,
+                          doctor.specializations.join(', '),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                           ),
@@ -181,8 +174,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     final doctor = Provider.of<DoctorProvider>(context, listen: false)
                         .doctors
                         .firstWhere((d) => d.id == value);
-                    _selectedDoctorName = doctor.fullName;
-                    _selectedDoctorSpecialty = doctor.specialtyText;
+                    _selectedDoctorName = doctor.name;
+                    _selectedDoctorSpecialty = doctor.specializations.join(', ');
                     _selectedDate = null;
                     _selectedTimeSlot = null;
                     _availableTimeSlots = [];
@@ -205,7 +198,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                         CircleAvatar(
                           backgroundColor: Theme.of(context).colorScheme.primary,
                           child: Text(
-                            widget.doctor!.firstName[0] + widget.doctor!.lastName[0],
+                            widget.doctor!.name[0],
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
@@ -215,11 +208,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Dr. ${widget.doctor!.fullName}',
+                                'Dr. ${widget.doctor!.name}',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
-                                widget.doctor!.specialtyText,
+                                widget.doctor!.specializations.join(', '),
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 ),

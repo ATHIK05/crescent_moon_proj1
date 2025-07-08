@@ -111,53 +111,23 @@ class DoctorProvider with ChangeNotifier {
       // Search query filter
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
-        if (!doctor.fullName.toLowerCase().contains(query) &&
-            !doctor.specialtyText.toLowerCase().contains(query) &&
-            !doctor.hospitalName.toLowerCase().contains(query)) {
+        if (!doctor.name.toLowerCase().contains(query) &&
+            !doctor.specializations.join(', ').toLowerCase().contains(query) &&
+            !doctor.clinics.join(', ').toLowerCase().contains(query)) {
           return false;
         }
       }
-
-      // Specialty filter
-      if (_selectedSpecialty != null && doctor.specialty != _selectedSpecialty) {
-        return false;
-      }
-
-      // Gender filter
-      if (_selectedGender != null && doctor.gender != _selectedGender) {
-        return false;
-      }
-
       // Language filter
       if (_selectedLanguage != null && 
           !doctor.languages.contains(_selectedLanguage)) {
         return false;
       }
-
-      // City filter
-      if (_selectedCity != null && doctor.city != _selectedCity) {
+      // Video consultation filter (if you want to keep it)
+      if (_videoConsultationOnly && !doctor.availableSlots.contains('video')) {
         return false;
       }
-
-      // Video consultation filter
-      if (_videoConsultationOnly && !doctor.isAvailableForVideo) {
-        return false;
-      }
-
-      // Rating filter
-      if (doctor.rating < _minRating) {
-        return false;
-      }
-
       return true;
     }).toList();
-
-    // Sort by rating and review count
-    _filteredDoctors.sort((a, b) {
-      final ratingComparison = b.rating.compareTo(a.rating);
-      if (ratingComparison != 0) return ratingComparison;
-      return b.reviewCount.compareTo(a.reviewCount);
-    });
   }
 
   Future<void> loadDoctorReviews(String doctorId) async {
@@ -182,33 +152,9 @@ class DoctorProvider with ChangeNotifier {
     }
   }
 
-  List<String> getAvailableTimeSlots(String doctorId, DateTime date) {
-    final doctor = _doctors.firstWhere((d) => d.id == doctorId);
-    final dayName = _getDayName(date.weekday);
-    
-    if (!doctor.availableDays.contains(dayName)) {
-      return [];
-    }
-
-    return doctor.timeSlots[dayName] ?? [];
-  }
-
-  String _getDayName(int weekday) {
-    switch (weekday) {
-      case 1: return 'monday';
-      case 2: return 'tuesday';
-      case 3: return 'wednesday';
-      case 4: return 'thursday';
-      case 5: return 'friday';
-      case 6: return 'saturday';
-      case 7: return 'sunday';
-      default: return 'monday';
-    }
-  }
-
   List<String> getAllSpecialties() {
     return _doctors
-        .map((doctor) => doctor.specialtyText)
+        .map((doctor) => doctor.specializations.join(', '))
         .toSet()
         .toList()
         ..sort();
@@ -220,15 +166,6 @@ class DoctorProvider with ChangeNotifier {
       languages.addAll(doctor.languages);
     }
     return languages.toList()..sort();
-  }
-
-  List<String> getAllCities() {
-    return _doctors
-        .where((doctor) => doctor.city != null)
-        .map((doctor) => doctor.city!)
-        .toSet()
-        .toList()
-        ..sort();
   }
 
   void clearError() {

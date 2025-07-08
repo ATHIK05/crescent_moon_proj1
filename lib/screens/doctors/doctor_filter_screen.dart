@@ -131,30 +131,30 @@ class _DoctorFilterScreenState extends State<DoctorFilterScreen> {
             const SizedBox(height: 24),
 
             // City Filter
-            Text(
-              'City',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedCity,
-              decoration: const InputDecoration(
-                labelText: 'Select City',
-                prefixIcon: Icon(Icons.location_city),
-              ),
-              items: _doctorProvider.getAllCities().map((city) {
-                return DropdownMenuItem(
-                  value: city,
-                  child: Text(city),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCity = value;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
+            // Text(
+            //   'City',
+            //   style: Theme.of(context).textTheme.titleLarge,
+            // ),
+            // const SizedBox(height: 8),
+            // DropdownButtonFormField<String>(
+            //   value: _selectedCity,
+            //   decoration: const InputDecoration(
+            //     labelText: 'Select City',
+            //     prefixIcon: Icon(Icons.location_city),
+            //   ),
+            //   items: _doctorProvider.getAllCities().map((city) {
+            //     return DropdownMenuItem(
+            //       value: city,
+            //       child: Text(city),
+            //     );
+            //   }).toList(),
+            //   onChanged: (value) {
+            //     setState(() {
+            //       _selectedCity = value;
+            //     });
+            //   },
+            // ),
+            // const SizedBox(height: 24),
 
             // Video Consultation Filter
             SwitchListTile(
