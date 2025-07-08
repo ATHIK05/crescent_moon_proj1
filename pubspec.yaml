@@ -51,7 +51,7 @@ dependencies:
   image_picker: ^1.0.4
   
   # Notifications
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^19.3.0
   
   # Rating & Reviews
   flutter_rating_bar: ^4.0.1
