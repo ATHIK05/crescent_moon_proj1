@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1074369417153",
+    "project_id": "web-portal-cm",
+    "storage_bucket": "web-portal-cm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074369417153:android:292fe75b7973089e06a940",
+        "android_client_info": {
+          "package_name": "com.example.medicare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1074369417153-vpmeq30ci4p4i8fthcmlrkheh2ec1c44.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAALUmImuqr3IBAaAkJmXNjgyutjwLKOK4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074369417153-vpmeq30ci4p4i8fthcmlrkheh2ec1c44.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
