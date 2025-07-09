@@ -96,7 +96,8 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                           Text(
                             '${widget.doctor.experience} years experience',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              fontSize: 16,
                             ),
                           ),
                         ],
@@ -116,6 +117,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
               Tab(text: 'Reviews'),
               Tab(text: 'Availability'),
             ],
+            indicatorColor: Theme.of(context).colorScheme.primary,
           ),
           
           // Tab Views

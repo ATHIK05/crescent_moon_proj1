@@ -41,7 +41,7 @@ class DoctorProvider with ChangeNotifier {
   void _loadDoctors() {
     _firestore
         .collection('doctors')
-        .where('isActive', isEqualTo: true)
+        .where('isCheckedIn', isEqualTo: true)
         .snapshots()
         .listen((snapshot) {
       _doctors = snapshot.docs

@@ -53,80 +53,110 @@ class _DoctorFilterScreenState extends State<DoctorFilterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Specialty Filter
-            Text(
-              'Specialty',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<DoctorSpecialty>(
-              value: _selectedSpecialty,
-              decoration: const InputDecoration(
-                labelText: 'Select Specialty',
-                prefixIcon: Icon(Icons.medical_services),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Specialty',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<DoctorSpecialty>(
+                      value: _selectedSpecialty,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Specialty',
+                        prefixIcon: Icon(Icons.medical_services),
+                      ),
+                      items: DoctorSpecialty.values.map((specialty) {
+                        return DropdownMenuItem(
+                          value: specialty,
+                          child: Text(_getSpecialtyText(specialty)),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedSpecialty = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-              items: DoctorSpecialty.values.map((specialty) {
-                return DropdownMenuItem(
-                  value: specialty,
-                  child: Text(_getSpecialtyText(specialty)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedSpecialty = value;
-                });
-              },
             ),
             const SizedBox(height: 24),
 
             // Gender Filter
-            Text(
-              'Gender',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<DoctorGender>(
-              value: _selectedGender,
-              decoration: const InputDecoration(
-                labelText: 'Select Gender',
-                prefixIcon: Icon(Icons.person),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gender',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<DoctorGender>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Gender',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      items: DoctorGender.values.map((gender) {
+                        return DropdownMenuItem(
+                          value: gender,
+                          child: Text(_getGenderText(gender)),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-              items: DoctorGender.values.map((gender) {
-                return DropdownMenuItem(
-                  value: gender,
-                  child: Text(_getGenderText(gender)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value;
-                });
-              },
             ),
             const SizedBox(height: 24),
 
             // Language Filter
-            Text(
-              'Language',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedLanguage,
-              decoration: const InputDecoration(
-                labelText: 'Select Language',
-                prefixIcon: Icon(Icons.language),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Language',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _selectedLanguage,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Language',
+                        prefixIcon: Icon(Icons.language),
+                      ),
+                      items: _doctorProvider.getAllLanguages().map((language) {
+                        return DropdownMenuItem(
+                          value: language,
+                          child: Text(language),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedLanguage = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-              items: _doctorProvider.getAllLanguages().map((language) {
-                return DropdownMenuItem(
-                  value: language,
-                  child: Text(language),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedLanguage = value;
-                });
-              },
             ),
             const SizedBox(height: 24),
 
@@ -157,65 +187,85 @@ class _DoctorFilterScreenState extends State<DoctorFilterScreen> {
             // const SizedBox(height: 24),
 
             // Video Consultation Filter
-            SwitchListTile(
-              title: const Text('Video Consultation Available'),
-              subtitle: const Text('Show only doctors available for video calls'),
-              value: _videoConsultationOnly,
-              onChanged: (value) {
-                setState(() {
-                  _videoConsultationOnly = value;
-                });
-              },
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Video Consultation Available'),
+                      subtitle: const Text('Show only doctors available for video calls'),
+                      value: _videoConsultationOnly,
+                      onChanged: (value) {
+                        setState(() {
+                          _videoConsultationOnly = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
             // Rating Filter
-            Text(
-              'Minimum Rating',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Slider(
-                    value: _minRating,
-                    min: 0.0,
-                    max: 5.0,
-                    divisions: 10,
-                    label: _minRating == 0.0 ? 'Any' : _minRating.toStringAsFixed(1),
-                    onChanged: (value) {
-                      setState(() {
-                        _minRating = value;
-                      });
-                    },
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _minRating == 0.0 ? 'Any' : _minRating.toStringAsFixed(1),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Minimum Rating',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Slider(
+                            value: _minRating,
+                            min: 0.0,
+                            max: 5.0,
+                            divisions: 10,
+                            label: _minRating == 0.0 ? 'Any' : _minRating.toStringAsFixed(1),
+                            onChanged: (value) {
+                              setState(() {
+                                _minRating = value;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _minRating == 0.0 ? 'Any' : _minRating.toStringAsFixed(1),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),

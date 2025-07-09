@@ -2,70 +2,56 @@ import 'package:flutter/material.dart';
 
 class DashboardCard extends StatelessWidget {
   final String title;
-  final String value;
+  final String? value;
+  final Widget? valueWidget;
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
 
   const DashboardCard({
-    super.key,
+    Key? key,
     required this.title,
-    required this.value,
+    this.value,
+    this.valueWidget,
     required this.icon,
     required this.color,
     this.onTap,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), // Reduced padding
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Important!
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 20,
-                    ),
-                  ),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.grey.shade400,
-                    ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 4),
+              Icon(icon, color: color, size: 28), // Slightly smaller icon
+              const SizedBox(height: 8),
               Text(
                 title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: valueWidget ??
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        value ?? '',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
               ),
             ],
           ),

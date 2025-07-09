@@ -162,6 +162,8 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
   Widget _buildDoctorCard(BuildContext context, DoctorModel doctor) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(
@@ -179,14 +181,19 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               Row(
                 children: [
                   // Doctor Avatar
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    backgroundImage: doctor.name.isNotEmpty ? NetworkImage(doctor.name) : null,
-                    child: doctor.name.isNotEmpty ? Text(
-                      doctor.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ) : null,
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      child: doctor.name.isNotEmpty ? Text(
+                        doctor.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                      ) : null,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   
@@ -210,7 +217,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                           doctor.specializations.join(', '),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -218,6 +225,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                           '${doctor.experience} years experience',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -231,9 +239,9 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               Row(
                 children: [
                   Icon(
-                    Icons.local_hospital,
+                    Icons.location_on,
                     size: 16,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
