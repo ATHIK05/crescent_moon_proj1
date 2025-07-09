@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  animated_widgets: ^1.1.0
+  flutter_animate: ^4.2.0
+  flutter_carousel_slider: ^1.1.0
+
+
   # Firebase
   firebase_core: ^3.15.1
   firebase_auth: ^5.6.2
@@ -73,3 +78,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - lib/assets/banner1.png
+    - lib/assets/banner2.png
+    - lib/assets/banner3.png
+    - lib/assets/dashboard_banner.png
+    - lib/assets/prescription.png
+    - lib/assets/stethoscope.png
+    - lib/assets/stars.png
+    - lib/assets/consultation.png
+    - lib/assets/icons/chat.png
+    - lib/assets/icons/settings.png

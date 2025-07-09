@@ -1,71 +1,60 @@
 import 'package:flutter/material.dart';
 
 class DashboardCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
+  final String titleLine1;
+  final String titleLine2;
+  final ImageProvider image;
   final VoidCallback? onTap;
 
   const DashboardCard({
-    super.key,
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
+    Key? key,
+    required this.titleLine1,
+    required this.titleLine2,
+    required this.image,
     this.onTap,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 6,
+      shadowColor: Colors.black12,
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 20,
-                    ),
-                  ),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.grey.shade400,
-                    ),
-                ],
+              Image(
+                image: image,
+                width: 92,
+                height: 92,
+                fit: BoxFit.contain,
               ),
-              const Spacer(),
+              const SizedBox(height: 16),
               Text(
-                value,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
+                titleLine1,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 4),
               Text(
-                title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                titleLine2,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
