@@ -1,57 +1,60 @@
 import 'package:flutter/material.dart';
 
 class DashboardCard extends StatelessWidget {
-  final String title;
-  final String? value;
-  final Widget? valueWidget;
-  final IconData icon;
-  final Color color;
+  final String titleLine1;
+  final String titleLine2;
+  final ImageProvider image;
   final VoidCallback? onTap;
 
   const DashboardCard({
     Key? key,
-    required this.title,
-    this.value,
-    this.valueWidget,
-    required this.icon,
-    required this.color,
+    required this.titleLine1,
+    required this.titleLine2,
+    required this.image,
     this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), // Reduced padding
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 6,
+      shadowColor: Colors.black12,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Important!
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 28), // Slightly smaller icon
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              Image(
+                image: image,
+                width: 92,
+                height: 92,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: valueWidget ??
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        value ?? '',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ),
+              const SizedBox(height: 16),
+              Text(
+                titleLine1,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                titleLine2,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
             ],
           ),
