@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import '../../models/appointment_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/billing_provider.dart';
@@ -20,7 +25,6 @@ import '../family/family_screen.dart';
 import '../medical_records/medical_records_screen.dart';
 import '../profile/profile_screen.dart';
 import '../settings/settings_screen.dart';
-import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -215,7 +219,59 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       DashboardCard(
                         title: 'Upcoming Appointments',
-                        value: appointmentProvider.upcomingAppointments.length.toString(),
+                        valueWidget: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('appointments')
+                              .where('patientId', isEqualTo: Provider.of<AuthProvider>(context, listen: false).userModel?.id)
+                              .orderBy('appointmentDate', descending: false)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              );
+                            }
+                            final ist = tz.getLocation('Asia/Kolkata');
+                            final now = tz.TZDateTime.from(DateTime.now(), ist);
+                            final appointments = snapshot.data!.docs
+                                .map((doc) => AppointmentModel.fromFirestore(doc))
+                                .toList();
+
+                            int upcomingCount = 0;
+                            for (final apt in appointments) {
+                              DateTime start = apt.appointmentDate;
+                              DateTime end = start;
+                              final match = RegExp(r'(\d{1,2}(?::\d{2})?\s*[AP]M)\s*-\s*(\d{1,2}(?::\d{2})?\s*[AP]M)').firstMatch(apt.timeSlot);
+                              if (match != null) {
+                                final endTimeStr = match.group(2)!;
+                                final timeFormat = endTimeStr.contains(':')
+                                    ? DateFormat('h:mm a')
+                                    : DateFormat('h a');
+                                final parsedEnd = timeFormat.parse(endTimeStr);
+                                end = DateTime(
+                                  start.year,
+                                  start.month,
+                                  start.day,
+                                  parsedEnd.hour,
+                                  parsedEnd.minute,
+                                );
+                              }
+                              final endIST = tz.TZDateTime.from(end, ist);
+                              if (endIST.isAfter(now)) {
+                                upcomingCount++;
+                              }
+                            }
+                            return Text(
+                              upcomingCount.toString(),
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            );
+                          },
+                        ),
                         icon: Icons.calendar_today,
                         color: Theme.of(context).colorScheme.primary,
                         onTap: () {

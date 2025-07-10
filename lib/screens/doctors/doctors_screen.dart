@@ -162,6 +162,8 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
   Widget _buildDoctorCard(BuildContext context, DoctorModel doctor) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(
@@ -179,21 +181,19 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               Row(
                 children: [
                   // Doctor Avatar
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    backgroundImage: doctor.profileImage != null
-                        ? NetworkImage(doctor.profileImage!)
-                        : null,
-                    child: doctor.profileImage == null
-                        ? Text(
-                            doctor.firstName[0] + doctor.lastName[0],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      child: doctor.name.isNotEmpty ? Text(
+                        doctor.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                      ) : null,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   
@@ -206,55 +206,26 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Dr. ${doctor.fullName}',
+                                'Dr. ${doctor.name}',
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                             ),
-                            if (doctor.isVerified)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.verified,
-                                      size: 12,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      'Verified',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          doctor.specialtyText,
+                          doctor.specializations.join(', '),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${doctor.experienceYears} years experience',
+                          '${doctor.experience} years experience',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -268,161 +239,20 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               Row(
                 children: [
                   Icon(
-                    Icons.local_hospital,
+                    Icons.location_on,
                     size: 16,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      doctor.hospitalName,
+                      doctor.clinics.join(', '),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
                 ],
               ),
-              if (doctor.city != null) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      doctor.city!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ],
               const SizedBox(height: 12),
-              
-              // Rating and Languages
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Colors.amber,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          doctor.rating.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${doctor.reviewCount})',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Languages: ${doctor.languagesText}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              // Consultation Options and Fees
-              Row(
-                children: [
-                  if (doctor.isAvailableForInClinic) ...[
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.local_hospital,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'In-Clinic',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              'AED ${doctor.consultationFee.toStringAsFixed(0)}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (doctor.isAvailableForInClinic && doctor.isAvailableForVideo)
-                    const SizedBox(width: 8),
-                  if (doctor.isAvailableForVideo) ...[
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.videocam,
-                              color: Theme.of(context).colorScheme.secondary,
-                              size: 20,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Video Call',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              'AED ${doctor.videoConsultationFee.toStringAsFixed(0)}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.secondary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
             ],
           ),
         ),

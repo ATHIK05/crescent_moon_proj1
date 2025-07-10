@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/doctor_provider.dart';
 import '../../models/appointment_model.dart';
@@ -30,20 +31,27 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   String? _selectedDoctorId;
   String? _selectedDoctorName;
   String? _selectedDoctorSpecialty;
-  DateTime? _selectedDate;
   String? _selectedTimeSlot;
   AppointmentType _selectedType = AppointmentType.consultation;
   List<String> _availableTimeSlots = [];
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
+  Map<String, bool> slotEnabled = {};
+  String? selectedSlotKey;
+
+  void _initializeSlotEnabled(DoctorModel doctor) {
+    slotEnabled.clear();
+    for (var slot in ['morning', 'evening', 'night']) {
+      slotEnabled[slot] = false;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     if (widget.doctor != null) {
+      _initializeSlotEnabled(widget.doctor!);
       _selectedDoctorId = widget.doctor!.id;
-      _selectedDoctorName = widget.doctor!.fullName;
-      _selectedDoctorSpecialty = widget.doctor!.specialtyText;
+      _selectedDoctorName = widget.doctor!.name;
+      _selectedDoctorSpecialty = widget.doctor!.specializations.join(', ');
       _selectedType = widget.isVideoConsultation 
           ? AppointmentType.consultation 
           : AppointmentType.consultation;
@@ -57,33 +65,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     super.dispose();
   }
 
-  void _onDateSelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDate, selectedDay)) {
-      setState(() {
-        _selectedDate = selectedDay;
-        _focusedDay = focusedDay;
-        _selectedTimeSlot = null;
-        _loadAvailableTimeSlots();
-      });
-    }
-  }
-
   void _loadAvailableTimeSlots() {
-    if (_selectedDoctorId != null && _selectedDate != null) {
-      final doctorProvider = Provider.of<DoctorProvider>(context, listen: false);
-      _availableTimeSlots = doctorProvider.getAvailableTimeSlots(
-        _selectedDoctorId!,
-        _selectedDate!,
-      );
-      setState(() {});
-    }
+    // Remove or comment out all code that references DoctorProvider.getAvailableTimeSlots. Only use availableSlots from the doctor model if needed.
   }
 
   Future<void> _bookAppointment() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedDoctorId == null ||
-        _selectedDate == null ||
         _selectedTimeSlot == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -103,7 +92,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       doctorId: _selectedDoctorId!,
       doctorName: _selectedDoctorName!,
       doctorSpecialty: _selectedDoctorSpecialty!,
-      appointmentDate: _selectedDate!,
+      appointmentDate: DateTime.now(),
       timeSlot: _selectedTimeSlot!,
       type: _selectedType,
       reason: _reasonController.text.trim().isNotEmpty 
@@ -131,6 +120,51 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final slotDefinitions = [
+      {
+        'key': 'morning',
+        'label': 'Morning',
+        'icon': Icons.wb_sunny,
+        'color': Colors.orange,
+        'start': TimeOfDay(hour: 8, minute: 0),
+        'end': TimeOfDay(hour: 12, minute: 0),
+      },
+      {
+        'key': 'evening',
+        'label': 'Evening',
+        'icon': Icons.wb_twilight,
+        'color': Colors.deepPurple,
+        'start': TimeOfDay(hour: 14, minute: 0),
+        'end': TimeOfDay(hour: 18, minute: 0),
+      },
+      {
+        'key': 'night',
+        'label': 'Night',
+        'icon': Icons.nightlight_round,
+        'color': Colors.indigo,
+        'start': TimeOfDay(hour: 18, minute: 0),
+        'end': TimeOfDay(hour: 22, minute: 0),
+      },
+    ];
+    List<String> getTimeChips(TimeOfDay start, TimeOfDay end) {
+      final chips = <String>[];
+      var current = start;
+      while (current.hour < end.hour || (current.hour == end.hour && current.minute < end.minute)) {
+        int nextMinute = current.minute + 15;
+        int nextHour = current.hour;
+        if (nextMinute >= 60) {
+          nextHour += nextMinute ~/ 60;
+          nextMinute = nextMinute % 60;
+        }
+        final next = TimeOfDay(hour: nextHour, minute: nextMinute);
+        final label = '${current.format(context)} - ${next.format(context)}';
+        chips.add(label);
+        if (next.hour > end.hour || (next.hour == end.hour && next.minute > end.minute)) break;
+        current = next;
+      }
+      return chips;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isVideoConsultation 
@@ -161,17 +195,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     .map((doctor) {
                   return DropdownMenuItem(
                     value: doctor.id,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Dr. ${doctor.fullName}'),
-                        Text(
-                          doctor.specialtyText,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Dr. ${doctor.name} (${doctor.specializations.join(', ')})',
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   );
                 }).toList(),
@@ -181,11 +207,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     final doctor = Provider.of<DoctorProvider>(context, listen: false)
                         .doctors
                         .firstWhere((d) => d.id == value);
-                    _selectedDoctorName = doctor.fullName;
-                    _selectedDoctorSpecialty = doctor.specialtyText;
-                    _selectedDate = null;
+                    _selectedDoctorName = doctor.name;
+                    _selectedDoctorSpecialty = doctor.specializations.join(', ');
                     _selectedTimeSlot = null;
                     _availableTimeSlots = [];
+                    _initializeSlotEnabled(doctor);
                   });
                 },
                 validator: (value) {
@@ -205,7 +231,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                         CircleAvatar(
                           backgroundColor: Theme.of(context).colorScheme.primary,
                           child: Text(
-                            widget.doctor!.firstName[0] + widget.doctor!.lastName[0],
+                            widget.doctor!.name[0],
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
@@ -215,11 +241,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Dr. ${widget.doctor!.fullName}',
+                                'Dr. ${widget.doctor!.name}',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
-                                widget.doctor!.specialtyText,
+                                widget.doctor!.specializations.join(', '),
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 ),
@@ -290,120 +316,197 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Select Date',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: TableCalendar<dynamic>(
-                    firstDay: DateTime.now(),
-                    lastDay: DateTime.now().add(const Duration(days: 90)),
-                    focusedDay: _focusedDay,
-                    calendarFormat: _calendarFormat,
-                    selectedDayPredicate: (day) {
-                      return isSameDay(_selectedDate, day);
-                    },
-                    onDaySelected: _onDateSelected,
-                    onFormatChanged: (format) {
-                      setState(() {
-                        _calendarFormat = format;
-                      });
-                    },
-                    onPageChanged: (focusedDay) {
-                      _focusedDay = focusedDay;
-                    },
-                    enabledDayPredicate: (day) {
-                      // Only enable days that are not in the past
-                      return !day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
-                    },
-                    calendarStyle: CalendarStyle(
-                      outsideDaysVisible: false,
-                      selectedDecoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      todayDecoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              Text(
                 'Select Time',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              if (_availableTimeSlots.isEmpty && _selectedDate != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
+              Builder(
+                builder: (context) {
+                  DoctorModel? doctor;
+                  if (widget.doctor != null) {
+                    doctor = widget.doctor;
+                  } else if (_selectedDoctorId != null) {
+                    final doctors = Provider.of<DoctorProvider>(context, listen: false).doctors;
+                    final found = doctors.where((d) => d.id == _selectedDoctorId);
+                    doctor = found.isNotEmpty ? found.first : null;
+                  }
+                  if (doctor == null) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
                         child: Text(
-                          'No available time slots for the selected date. Please choose another date.',
+                          'Please select a doctor to view available time slots.',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.orange.shade700,
-                          ),
+                                color: Colors.grey,
+                              ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ],
-                  ),
-                )
-              else if (_availableTimeSlots.isNotEmpty)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _availableTimeSlots.map((timeSlot) {
-                    final isSelected = _selectedTimeSlot == timeSlot;
-                    return FilterChip(
-                      label: Text(timeSlot),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedTimeSlot = selected ? timeSlot : null;
-                        });
-                      },
                     );
-                  }).toList(),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Please select a date to view available time slots',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  }
+                  final DoctorModel d = doctor;
+
+                  final now = DateTime.now();
+                  final today = DateTime(now.year, now.month, now.day);
+
+                  return FutureBuilder<QuerySnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('appointments')
+                        .where('doctorId', isEqualTo: d.id)
+                        .where('appointmentDate',
+                            isGreaterThanOrEqualTo: DateTime(today.year, today.month, today.day),
+                            isLessThan: DateTime(today.year, today.month, today.day + 1))
+                        .get(),
+                    builder: (context, snapshot) {
+                      final bookedSlots = <String>{};
+                      if (snapshot.hasData) {
+                        for (var doc in snapshot.data!.docs) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          if (data['timeSlot'] != null) {
+                            bookedSlots.add(data['timeSlot']);
+                          }
+                        }
+                      }
+
+                      List<String> getAvailableTimeChips(TimeOfDay start, TimeOfDay end) {
+                        final chips = <String>[];
+                        var current = start;
+                        while (current.hour < end.hour ||
+                            (current.hour == end.hour && current.minute < end.minute)) {
+                          int nextMinute = current.minute + 15;
+                          int nextHour = current.hour;
+                          if (nextMinute >= 60) {
+                            nextHour += nextMinute ~/ 60;
+                            nextMinute = nextMinute % 60;
+                          }
+                          final next = TimeOfDay(hour: nextHour, minute: nextMinute);
+                          final label = '${current.format(context)} - ${next.format(context)}';
+
+                          bool isPast = false;
+                          if (today == DateTime(now.year, now.month, now.day)) {
+                            final slotEnd = DateTime(
+                              now.year,
+                              now.month,
+                              now.day,
+                              next.hour,
+                              next.minute,
+                            );
+                            if (slotEnd.isBefore(now)) isPast = true;
+                          }
+                          if (!bookedSlots.contains(label) && !isPast) {
+                            chips.add(label);
+                          }
+                          if (next.hour > end.hour ||
+                              (next.hour == end.hour && next.minute > end.minute)) break;
+                          current = next;
+                        }
+                        return chips;
+                      }
+
+                      final slotChips = slotDefinitions
+                          .where((slot) => d.availableSlots.contains(slot['key']))
+                          .map((slot) {
+                        final key = slot['key'] as String;
+                        final availableChips = getAvailableTimeChips(
+                            slot['start'] as TimeOfDay, slot['end'] as TimeOfDay);
+                        return availableChips.isNotEmpty;
+                      }).toList();
+
+                      // If no slots at all are available, show a friendly message
+                      final noSlotsAvailable = slotChips.isEmpty || slotChips.every((v) => v == false);
+
+                      if (noSlotsAvailable) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: Text(
+                              'No available time slots for booking.\nPlease select another date or doctor.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: slotDefinitions
+                            .where((slot) => d.availableSlots.contains(slot['key']))
+                            .map((slot) {
+                          final key = slot['key'] as String;
+                          final availableChips = getAvailableTimeChips(
+                              slot['start'] as TimeOfDay, slot['end'] as TimeOfDay);
+                          if (availableChips.isEmpty) return const SizedBox.shrink();
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(slot['icon'] as IconData, color: slot['color'] as Color, size: 28),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        slot['label'] as String,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        '${(slot['start'] as TimeOfDay).format(context)} - ${(slot['end'] as TimeOfDay).format(context)}',
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
+                                      ),
+                                      const Spacer(),
+                                      Switch(
+                                        value: slotEnabled[key] ?? false,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            slotEnabled[key] = val;
+                                            if (val) selectedSlotKey = key;
+                                            else if (selectedSlotKey == key) selectedSlotKey = null;
+                                            _selectedTimeSlot = null;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  if (slotEnabled[key] ?? false) ...[
+                                    const SizedBox(height: 12),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: availableChips.map((chip) {
+                                        final isSelected = _selectedTimeSlot == chip;
+                                        return ChoiceChip(
+                                          label: Text(chip),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setState(() {
+                                              _selectedTimeSlot = selected ? chip : null;
+                                            });
+                                          },
+                                          selectedColor: Theme.of(context).colorScheme.primary,
+                                          labelStyle: TextStyle(
+                                            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  );
+                },
+              ),
               const SizedBox(height: 24),
               
               Text(

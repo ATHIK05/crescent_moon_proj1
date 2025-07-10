@@ -40,6 +40,20 @@ class AppointmentProvider with ChangeNotifier {
     });
   }
 
+  Future<void> reloadAppointments() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final snapshot = await _firestore
+        .collection('appointments')
+        .where('patientId', isEqualTo: user.uid)
+        .orderBy('appointmentDate', descending: true)
+        .get();
+    _appointments = snapshot.docs
+        .map((doc) => AppointmentModel.fromFirestore(doc))
+        .toList();
+    notifyListeners();
+  }
+
   Future<bool> bookAppointment({
     required String doctorId,
     required String doctorName,

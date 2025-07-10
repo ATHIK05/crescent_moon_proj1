@@ -107,12 +107,16 @@ class AppointmentModel {
   }
 
   bool get isUpcoming {
-    return appointmentDate.isAfter(DateTime.now()) && 
+    final nowUtc = DateTime.now().toUtc();
+    final nowIst = nowUtc.add(const Duration(hours: 5, minutes: 30));
+    return appointmentDate.isAfter(nowIst) && 
            status != AppointmentStatus.cancelled;
   }
 
   bool get isPast {
-    return appointmentDate.isBefore(DateTime.now()) || 
+    final nowUtc = DateTime.now().toUtc();
+    final nowIst = nowUtc.add(const Duration(hours: 5, minutes: 30));
+    return appointmentDate.isBefore(nowIst) || 
            status == AppointmentStatus.completed;
   }
 }
