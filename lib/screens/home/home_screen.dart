@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import '../../models/appointment_model.dart';
+import 'package:flutter_carousel_slider/carousel_slider.dart';
+import 'package:flutter_carousel_slider/carousel_slider_transforms.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/billing_provider.dart';
 import '../../providers/consultation_provider.dart';
 import '../../providers/pharmacy_provider.dart';
-import '../../providers/doctor_provider.dart';
 import '../../widgets/dashboard_card.dart';
+import '../../widgets/medical_background.dart';
 import '../../widgets/recent_activity_item.dart';
 import '../../widgets/empty_state.dart';
+
 import '../appointments/appointments_screen.dart';
 import '../prescriptions/prescriptions_screen.dart';
 import '../billing/billing_screen.dart';
@@ -51,34 +52,22 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: Theme.of(context).colorScheme.primary,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: Theme
+            .of(context)
+            .colorScheme
+            .primary,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
+              icon: Icon(Icons.dashboard), label: 'Dashboard'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Appointments',
-          ),
+              icon: Icon(Icons.calendar_today), label: 'Appointments'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_search),
-            label: 'Doctors',
-          ),
+              icon: Icon(Icons.person_search), label: 'Doctors'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.local_pharmacy),
-            label: 'Pharmacy',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+              icon: Icon(Icons.local_pharmacy), label: 'Pharmacy'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
@@ -92,62 +81,29 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Consumer<AuthProvider>(
-          builder: (context, authProvider, child) {
-            final user = authProvider.userModel;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, ${user?.firstName ?? 'Patient'}!',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Text(
-                  DateFormat('EEEE, MMMM d').format(DateTime.now()),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+        title: const GreetingHeader(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.message),
+            icon: Image.asset('lib/assets/icons/chat.png', width: 40, height: 40),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MessagingScreen()),
-              );
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const MessagingScreen()));
             },
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
-              switch (value) {
-                case 'prescriptions':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PrescriptionsScreen()),
-                  );
-                  break;
-                case 'bills':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BillingScreen()),
-                  );
-                  break;
-                case 'family':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const FamilyScreen()),
-                  );
-                  break;
-                case 'records':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const MedicalRecordsScreen()),
-                  );
-                  break;
-              }
+              final routes = {
+                'prescriptions': const PrescriptionsScreen(),
+                'bills': const BillingScreen(),
+                'family': const FamilyScreen(),
+                'records': const MedicalRecordsScreen(),
+              };
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => routes[value]!));
             },
-            itemBuilder: (context) => [
+            itemBuilder: (context) =>
+            [
               const PopupMenuItem(
                 value: 'prescriptions',
                 child: ListTile(
@@ -183,182 +139,217 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Image.asset('lib/assets/icons/settings.png', width: 38, height: 38),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: Stack(
+          children: [
+          const MedicalBackground(), // 👈 Add your animated medical background
+      RefreshIndicator(
         onRefresh: () async {
-          // Refresh data
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dashboard refreshed')),
+          );
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Quick Stats
-              Text(
-                'Quick Overview',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              Consumer4<AppointmentProvider, BillingProvider, ConsultationProvider, PharmacyProvider>(
-                builder: (context, appointmentProvider, billingProvider, consultationProvider, pharmacyProvider, child) {
-                  return GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: [
-                      DashboardCard(
-                        title: 'Upcoming Appointments',
-                        valueWidget: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('appointments')
-                              .where('patientId', isEqualTo: Provider.of<AuthProvider>(context, listen: false).userModel?.id)
-                              .orderBy('appointmentDate', descending: false)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              );
-                            }
-                            final ist = tz.getLocation('Asia/Kolkata');
-                            final now = tz.TZDateTime.from(DateTime.now(), ist);
-                            final appointments = snapshot.data!.docs
-                                .map((doc) => AppointmentModel.fromFirestore(doc))
-                                .toList();
-
-                            int upcomingCount = 0;
-                            for (final apt in appointments) {
-                              DateTime start = apt.appointmentDate;
-                              DateTime end = start;
-                              final match = RegExp(r'(\d{1,2}(?::\d{2})?\s*[AP]M)\s*-\s*(\d{1,2}(?::\d{2})?\s*[AP]M)').firstMatch(apt.timeSlot);
-                              if (match != null) {
-                                final endTimeStr = match.group(2)!;
-                                final timeFormat = endTimeStr.contains(':')
-                                    ? DateFormat('h:mm a')
-                                    : DateFormat('h a');
-                                final parsedEnd = timeFormat.parse(endTimeStr);
-                                end = DateTime(
-                                  start.year,
-                                  start.month,
-                                  start.day,
-                                  parsedEnd.hour,
-                                  parsedEnd.minute,
-                                );
-                              }
-                              final endIST = tz.TZDateTime.from(end, ist);
-                              if (endIST.isAfter(now)) {
-                                upcomingCount++;
-                              }
-                            }
-                            return Text(
-                              upcomingCount.toString(),
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            );
-                          },
+              // 🚀 Banner with Carousel
+              SizedBox(
+                height: 160,
+                child: CarouselSlider.builder(
+                  unlimitedMode: true,
+                  enableAutoSlider: true,
+                  autoSliderDelay: const Duration(seconds: 5),
+                  itemCount: 3,
+                  viewportFraction: 1.0,
+                  slideBuilder: (index) {
+                    final banners = [
+                      'lib/assets/banner1.png',
+                      'lib/assets/banner2.png',
+                      'lib/assets/banner3.png',
+                    ];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          banners[index],
+                          fit: BoxFit.fitWidth,
+                          width: double.infinity,
                         ),
-                        icon: Icons.calendar_today,
-                        color: Theme.of(context).colorScheme.primary,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AppointmentsScreen()),
-                          );
-                        },
                       ),
-                      DashboardCard(
-                        title: 'Cart Items',
-                        value: pharmacyProvider.cartItemCount.toString(),
-                        icon: Icons.shopping_cart,
-                        color: Colors.orange,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const PharmacyScreen()),
-                          );
-                        },
-                      ),
-                      DashboardCard(
-                        title: 'Recent Consultations',
-                        value: consultationProvider.recentConsultations.length.toString(),
-                        icon: Icons.medical_services,
-                        color: Theme.of(context).colorScheme.secondary,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ConsultationsScreen()),
-                          );
-                        },
-                      ),
-                      DashboardCard(
-                        title: 'Loyalty Points',
-                        value: pharmacyProvider.loyaltyPoints.toString(),
-                        icon: Icons.stars,
-                        color: Colors.purple,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const PharmacyScreen()),
-                          );
-                        },
-                      ),
-                    ],
+                    );
+                  },
+                  slideTransform: const DefaultTransform(),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Text('Quick Overview', style: Theme
+                  .of(context)
+                  .textTheme
+                  .headlineLarge),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 600;
+                  return Consumer4<AppointmentProvider,
+                      BillingProvider,
+                      ConsultationProvider,
+                      PharmacyProvider>(
+                    builder: (context, appointment, billing, consultation,
+                        pharmacy, child) {
+                      return Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: [
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 16 * 3) / 4
+                                : (constraints.maxWidth - 16) / 2,
+                            child: DashboardCard(
+                              titleLine1: 'Upcoming',
+                              titleLine2: 'Appointments',
+                              image: const AssetImage(
+                                  'lib/assets/stethoscope.png'),
+                              onTap: () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (
+                                        _) => const AppointmentsScreen()),
+                                  ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 16 * 3) / 4
+                                : (constraints.maxWidth - 16) / 2,
+                            child: DashboardCard(
+                              titleLine1: 'Cart Items',
+                              titleLine2: 'Pharmacy',
+                              image: const AssetImage(
+                                  'lib/assets/prescription.png'),
+                              onTap: () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => const PharmacyScreen()),
+                                  ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 16 * 3) / 4
+                                : (constraints.maxWidth - 16) / 2,
+                            child: DashboardCard(
+                              titleLine1: 'Recent',
+                              titleLine2: 'Consultations',
+                              image: const AssetImage(
+                                  'lib/assets/consultation.png'),
+                              onTap: () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (
+                                        _) => const ConsultationsScreen()),
+                                  ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 16 * 3) / 4
+                                : (constraints.maxWidth - 16) / 2,
+                            child: DashboardCard(
+                              titleLine1: 'Loyalty Points',
+                              titleLine2: 'Wellness Packages',
+                              image: const AssetImage('lib/assets/stars.png'),
+                              onTap: () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => const PharmacyScreen()),
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ).animate().fade(duration: 700.ms).slideY(
+                          begin: 0.2, duration: 700.ms);
+                    },
                   );
                 },
               ),
+
               const SizedBox(height: 32),
-              
-              // Recent Activity
-              Text(
-                'Recent Activity',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
+              Text('Recent Activity', style: Theme
+                  .of(context)
+                  .textTheme
+                  .headlineLarge),
               const SizedBox(height: 16),
-              Consumer3<AppointmentProvider, BillingProvider, ConsultationProvider>(
-                builder: (context, appointmentProvider, billingProvider, consultationProvider, child) {
-                  final recentAppointments = appointmentProvider.appointments.take(2).toList();
-                  final recentBills = billingProvider.bills.take(2).toList();
-                  final recentConsultations = consultationProvider.recentConsultations.take(2).toList();
-                  
-                  if (recentAppointments.isEmpty && recentBills.isEmpty && recentConsultations.isEmpty) {
+              Consumer3<AppointmentProvider,
+                  BillingProvider,
+                  ConsultationProvider>(
+                builder: (context, appointment, billing, consultation, child) {
+                  final recentAppointments = appointment.appointments
+                      .take(2)
+                      .toList();
+                  final recentBills = billing.bills.take(2).toList();
+                  final recentConsults = consultation.recentConsultations.take(
+                      2).toList();
+
+                  if (recentAppointments.isEmpty && recentBills.isEmpty &&
+                      recentConsults.isEmpty) {
                     return const EmptyState(
                       icon: Icons.history,
                       title: 'No Recent Activity',
                       message: 'Your recent healthcare activities will appear here.',
                     );
                   }
-                  
+
                   return Column(
                     children: [
-                      ...recentAppointments.map((appointment) => RecentActivityItem(
-                        title: 'Appointment with ${appointment.doctorName}',
-                        subtitle: DateFormat('MMM d, y - h:mm a').format(appointment.appointmentDate),
-                        icon: Icons.calendar_today,
-                        color: Theme.of(context).colorScheme.primary,
-                      )),
-                      ...recentBills.map((bill) => RecentActivityItem(
-                        title: 'Bill ${bill.billNumber}',
-                        subtitle: '\$${bill.totalAmount.toStringAsFixed(2)} - ${bill.statusText}',
-                        icon: Icons.receipt,
-                        color: bill.isPaid ? Colors.green : Theme.of(context).colorScheme.error,
-                      )),
-                      ...recentConsultations.map((consultation) => RecentActivityItem(
-                        title: 'Consultation with ${consultation.doctorName}',
-                        subtitle: DateFormat('MMM d, y').format(consultation.consultationDate),
-                        icon: Icons.medical_services,
-                        color: Theme.of(context).colorScheme.secondary,
-                      )),
+                      ...recentAppointments.map((a) =>
+                          RecentActivityItem(
+                            title: 'Appointment with ${a.doctorName}',
+                            subtitle: DateFormat('MMM d, y - h:mm a').format(
+                                a.appointmentDate),
+                            icon: Icons.calendar_today,
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .primary,
+                          ).animate().fade(duration: 500.ms).slideX(
+                              begin: 0.3)),
+                      ...recentBills.map((b) =>
+                          RecentActivityItem(
+                            title: 'Bill ${b.billNumber}',
+                            subtitle: '\$${b.totalAmount.toStringAsFixed(
+                                2)} - ${b.statusText}',
+                            icon: Icons.receipt,
+                            color: b.isPaid ? Colors.green : Theme
+                                .of(context)
+                                .colorScheme
+                                .error,
+                          ).animate().fade(duration: 500.ms).slideX(
+                              begin: 0.3)),
+                      ...recentConsults.map((c) =>
+                          RecentActivityItem(
+                            title: 'Consultation with ${c.doctorName}',
+                            subtitle: DateFormat('MMM d, y').format(
+                                c.consultationDate),
+                            icon: Icons.medical_services,
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .secondary,
+                          ).animate().fade(duration: 500.ms).slideX(
+                              begin: 0.3)),
                     ],
                   );
                 },
@@ -367,6 +358,46 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
+          ],
+      ),
+    );
+  }
+}
+
+
+  class GreetingHeader extends StatelessWidget {
+  const GreetingHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context
+        .watch<AuthProvider>()
+        .userModel;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Hello, ${user?.firstName ?? 'Patient'}!',
+          style: Theme
+              .of(context)
+              .textTheme
+              .headlineLarge,
+        ),
+        Text(
+          DateFormat('EEEE, MMMM d').format(DateTime.now()),
+          style: Theme
+              .of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(
+            color: Theme
+                .of(context)
+                .colorScheme
+                .onSurface
+                .withOpacity(0.6),
+          ),
+        ),
+      ],
     );
   }
 }
