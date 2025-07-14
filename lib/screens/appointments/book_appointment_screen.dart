@@ -88,17 +88,48 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       listen: false,
     );
 
-    final success = await appointmentProvider.bookAppointment(
-      doctorId: _selectedDoctorId!,
-      doctorName: _selectedDoctorName!,
-      doctorSpecialty: _selectedDoctorSpecialty!,
-      appointmentDate: DateTime.now(),
-      timeSlot: _selectedTimeSlot!,
-      type: _selectedType,
-      reason: _reasonController.text.trim().isNotEmpty 
-          ? _reasonController.text.trim() 
-          : null,
-    );
+    // Firestore transaction to prevent double booking
+    final appointmentsRef = FirebaseFirestore.instance.collection('appointments');
+    final query = await appointmentsRef
+        .where('doctorId', isEqualTo: _selectedDoctorId)
+        .where('appointmentDate', isEqualTo: DateTime.now())
+        .where('timeSlot', isEqualTo: _selectedTimeSlot)
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This time slot has just been booked. Please select another slot.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    bool success = false;
+    String? errorMessage;
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final freshQuery = await appointmentsRef
+          .where('doctorId', isEqualTo: _selectedDoctorId)
+          .where('appointmentDate', isEqualTo: DateTime.now())
+          .where('timeSlot', isEqualTo: _selectedTimeSlot)
+          .get();
+      if (freshQuery.docs.isNotEmpty) {
+        errorMessage = 'This time slot has just been booked. Please select another slot.';
+        return;
+      }
+      success = await appointmentProvider.bookAppointment(
+        doctorId: _selectedDoctorId!,
+        doctorName: _selectedDoctorName!,
+        doctorSpecialty: _selectedDoctorSpecialty!,
+        appointmentDate: DateTime.now(),
+        timeSlot: _selectedTimeSlot!,
+        type: _selectedType,
+        reason: _reasonController.text.trim().isNotEmpty 
+            ? _reasonController.text.trim() 
+            : null,
+      );
+    });
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +142,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(appointmentProvider.errorMessage ?? 'Failed to book appointment'),
+          content: Text(errorMessage ?? appointmentProvider.errorMessage ?? 'Failed to book appointment'),
           backgroundColor: Colors.red,
         ),
       );
