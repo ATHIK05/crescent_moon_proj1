@@ -8,7 +8,7 @@ class BillingProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<BillModel> _bills = [];
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _errorMessage;
 
   List<BillModel> get bills => _bills;

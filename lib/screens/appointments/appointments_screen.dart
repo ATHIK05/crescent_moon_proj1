@@ -15,6 +15,13 @@ class AppointmentsScreen extends StatefulWidget {
   @override
   State<AppointmentsScreen> createState() => _AppointmentsScreenState();
 }
+bool _is24HourFormat(BuildContext context) {
+  final now = TimeOfDay.now();
+  final materialLocalizations = MaterialLocalizations.of(context);
+  final formattedTime = materialLocalizations.formatTimeOfDay(now);
+  return !formattedTime.toLowerCase().contains('am') &&
+         !formattedTime.toLowerCase().contains('pm');
+}
 
 class _AppointmentsScreenState extends State<AppointmentsScreen>
     with SingleTickerProviderStateMixin {
@@ -89,7 +96,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                           );
                         },
                       ),
-                      EmptyState(
+                      const EmptyState(
                         icon: Icons.calendar_today,
                         title: 'No past appointments',
                         message: 'Your appointment history will appear here.',
@@ -113,15 +120,14 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   DateTime end = start;
 
                   // Robustly parse end time from timeSlot (e.g. "9:45 AM - 10:00 AM" or "9 PM - 10 PM")
-                  final match = RegExp(r'(\d{1,2}(?::\d{2})?\s*[AP]M)\s*-\s*(\d{1,2}(?::\d{2})?\s*[AP]M)').firstMatch(apt.timeSlot);
-                  if (match != null) {
-                    final endTimeStr = match.group(2)!; // e.g. "10:00 AM" or "10 PM"
-                    final timeFormat = endTimeStr.contains(':')
-                        ? DateFormat('h:mm a')
-                        : DateFormat('h a');
-                    final parsedEnd = timeFormat.parse(endTimeStr);
+                  final match = RegExp(
+                    r'(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})')
+                      .firstMatch(apt.timeSlot);
 
-                    // Set end time on the same day as appointmentDate
+                  if (match != null) {
+                    final endTimeStr = match.group(2)!; // e.g. "14:00"
+                    final parsedEnd = DateFormat('HH:mm').parse(endTimeStr);
+
                     end = DateTime(
                       start.year,
                       start.month,
@@ -129,7 +135,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                       parsedEnd.hour,
                       parsedEnd.minute,
                     );
+                  } else {
+                    print('TimeSlot not matched: ${apt.timeSlot}');
                   }
+
 
                   // Convert to IST for comparison
                   final endIST = tz.TZDateTime.from(end, ist);
@@ -277,8 +286,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary, size: 28),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    child: Icon(Icons.person,
+                        color: Theme.of(context).colorScheme.primary, size: 28),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -287,20 +298,28 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                       children: [
                         Text(
                           appointment.doctorName,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           appointment.doctorSpecialty,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.6),
+                                  ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -319,10 +338,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
               const SizedBox(height: 20),
               Row(
                 children: [
-                  _iconWithBg(Icons.calendar_today, Theme.of(context).colorScheme.primary),
+                  _iconWithBg(Icons.calendar_today,
+                      Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat('EEEE, MMMM d, y').format(appointment.appointmentDate),
+                    DateFormat('EEEE, MMMM d, y')
+                        .format(appointment.appointmentDate),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -365,7 +386,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
                   ],
                 ),
               ],
-              if (showActions && appointment.status != AppointmentStatus.cancelled) ...[
+              if (showActions &&
+                  appointment.status != AppointmentStatus.cancelled) ...[
                 const SizedBox(height: 18),
                 Row(
                   children: [
@@ -423,7 +445,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Appointment'),
-        content: const Text('Are you sure you want to cancel this appointment?'),
+        content:
+            const Text('Are you sure you want to cancel this appointment?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -465,14 +488,17 @@ class _AnimatedAppointmentListView extends StatefulWidget {
     required this.appointments,
     required this.showActions,
     required this.buildCard,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
-  State<_AnimatedAppointmentListView> createState() => _AnimatedAppointmentListViewState();
+  State<_AnimatedAppointmentListView> createState() =>
+      _AnimatedAppointmentListViewState();
 }
 
-class _AnimatedAppointmentListViewState extends State<_AnimatedAppointmentListView> with SingleTickerProviderStateMixin {
+class _AnimatedAppointmentListViewState
+    extends State<_AnimatedAppointmentListView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -485,8 +511,10 @@ class _AnimatedAppointmentListViewState extends State<_AnimatedAppointmentListVi
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+    _fadeAnimation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _slideAnimation = Tween<Offset>(
+            begin: const Offset(0, 0.08), end: Offset.zero)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasAnimated) {

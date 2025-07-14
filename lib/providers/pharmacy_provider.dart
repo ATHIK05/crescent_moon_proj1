@@ -9,7 +9,7 @@ class PharmacyProvider with ChangeNotifier {
 
   List<PharmacyProductModel> _products = [];
   List<PharmacyProductModel> _filteredProducts = [];
-  List<CartItemModel> _cartItems = [];
+  final List<CartItemModel> _cartItems = [];
   List<PharmacyOrderModel> _orders = [];
   bool _isLoading = false;
   String? _errorMessage;

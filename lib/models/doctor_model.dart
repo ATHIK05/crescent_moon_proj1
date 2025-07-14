@@ -36,9 +36,11 @@ class DoctorModel {
   final List<String> clinics;
   final List<String> availableSlots;
   final bool isCheckedIn;
+  final List<String> services;
   final DateTime? checkedInAt;
   final DateTime? checkedOutAt;
   final DateTime? lastUpdated;
+  final String introduction;
 
   DoctorModel({
     required this.id,
@@ -51,11 +53,12 @@ class DoctorModel {
     required this.clinics,
     required this.availableSlots,
     required this.isCheckedIn,
+    required this.services,
+    required this.introduction,
     this.checkedInAt,
     this.checkedOutAt,
     this.lastUpdated,
   });
-
   factory DoctorModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return DoctorModel(
@@ -71,6 +74,8 @@ class DoctorModel {
       clinics: List<String>.from(data['clinics'] ?? []),
       availableSlots: List<String>.from(data['availableSlots'] ?? []),
       isCheckedIn: data['isCheckedIn'] ?? false,
+      services: List<String>.from(data['services'] ?? []),
+       introduction: data['introduction'] ?? '',
       checkedInAt: data['checkedInAt'] != null
           ? (data['checkedInAt'] as Timestamp).toDate()
           : null,
@@ -82,7 +87,6 @@ class DoctorModel {
           : null,
     );
   }
-
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
@@ -94,9 +98,14 @@ class DoctorModel {
       'clinics': clinics,
       'availableSlots': availableSlots,
       'isCheckedIn': isCheckedIn,
-      'checkedInAt': checkedInAt != null ? Timestamp.fromDate(checkedInAt!) : null,
-      'checkedOutAt': checkedOutAt != null ? Timestamp.fromDate(checkedOutAt!) : null,
-      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'services': services,
+      'introduction': introduction,
+      'checkedInAt':
+          checkedInAt != null ? Timestamp.fromDate(checkedInAt!) : null,
+      'checkedOutAt':
+          checkedOutAt != null ? Timestamp.fromDate(checkedOutAt!) : null,
+      'lastUpdated':
+          lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
 }

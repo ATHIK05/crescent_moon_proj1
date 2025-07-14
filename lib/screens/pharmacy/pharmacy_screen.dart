@@ -350,7 +350,7 @@ class _PharmacyScreenState extends State<PharmacyScreen>
                   ),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.stars,
                         size: 48,
                         color: Colors.white,

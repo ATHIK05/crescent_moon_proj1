@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import '../utils/pdf_utils.dart';
 

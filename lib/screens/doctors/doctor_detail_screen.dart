@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/doctor_model.dart';
 import '../../providers/doctor_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/medical_background.dart';
 import '../appointments/book_appointment_screen.dart';
 
 class DoctorDetailScreen extends StatefulWidget {
@@ -23,12 +25,18 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  final Map<String, bool> _expanded = {
+    'introduction': true,
+    'qualifications': false,
+    'specializations': false,
+    'services': false,
+  };
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
-    // Load doctor reviews
+
     Provider.of<DoctorProvider>(context, listen: false)
         .loadDoctorReviews(widget.doctor.id);
   }
@@ -42,32 +50,48 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFEBF5F7),
       appBar: AppBar(
         title: Text('Dr. ${widget.doctor.name}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {
-              // Share doctor profile
-            },
+            onPressed: () {},
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Doctor Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
+          const MedicalBackground(),
+          Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
                   children: [
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       child: Text(
-                        widget.doctor.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        widget.doctor.name
+                            .split(' ')
+                            .map((e) => e.isNotEmpty ? e[0] : '')
+                            .take(2)
+                            .join(),
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -75,61 +99,96 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Dr. ${widget.doctor.name}',
-                                  style: Theme.of(context).textTheme.headlineSmall,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'Dr. ${widget.doctor.name}',
+                            style:
+                                Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             widget.doctor.specializations.join(', '),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${widget.doctor.experience} years experience',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                              fontSize: 16,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                                  fontSize: 16,
+                                ),
                           ),
+                          if (widget.doctor.languages.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  'Languages: ',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                        fontSize: 16,
+                                      ),
+                                ),
+                                Text(
+                                  widget.doctor.languages.join(', '),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.9),
+                                        fontSize: 16,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          
-          // Tab Bar
-          TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: 'About'),
-              Tab(text: 'Reviews'),
-              Tab(text: 'Availability'),
+              ),
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'About'),
+                  Tab(text: 'Reviews'),
+                  Tab(text: 'Availability'),
+                ],
+                indicatorColor: Theme.of(context).colorScheme.primary,
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildAboutTab(),
+                    _buildReviewsTab(),
+                    _buildAvailabilityTab(),
+                  ],
+                ),
+              ),
             ],
-            indicatorColor: Theme.of(context).colorScheme.primary,
-          ),
-          
-          // Tab Views
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildAboutTab(),
-                _buildReviewsTab(),
-                _buildAvailabilityTab(),
-              ],
-            ),
           ),
         ],
       ),
@@ -142,49 +201,113 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'About',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          ...widget.doctor.education.map((qualification) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    qualification,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ],
+          _buildCollapsibleSection(
+            title: "Introduction",
+            sectionKey: "introduction",
+            child: Text(
+              (widget.doctor.introduction.trim().isNotEmpty ?? false)
+                  ? widget.doctor.introduction
+                  : "No introduction available.",
+              textAlign: TextAlign.justify,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
-          )),
-          const SizedBox(height: 24),
-          
-          Text(
-            'Languages',
-            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: widget.doctor.languages.map((language) => Chip(
-              label: Text(language),
-              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            )).toList(),
+          const SizedBox(height: 12),
+          _buildCollapsibleSection(
+            title: "Qualifications",
+            sectionKey: "qualifications",
+            child: Text(
+              widget.doctor.education.join(', '),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          _buildCollapsibleSection(
+            title: "Specializations",
+            sectionKey: "specializations",
+            child: Text(
+              widget.doctor.specializations.join(', '),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildCollapsibleSection(
+            title: "Services",
+            sectionKey: "services",
+            child: (widget.doctor.services.isNotEmpty)
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: widget.doctor.services
+                        .map((service) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                children: [
+                                  const Text("• ",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  Expanded(child: Text(service)),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                  )
+                : Text(
+                    "No services information available.",
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleSection({
+    required String title,
+    required String sectionKey,
+    required Widget child,
+  }) {
+    final isExpanded = _expanded[sectionKey] ?? false;
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              setState(() {
+                _expanded[sectionKey] = !isExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  ),
+                  Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: child,
+            ),
         ],
       ),
     );
@@ -218,7 +341,8 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
                           child: Text(
                             review.patientName[0],
                             style: const TextStyle(color: Colors.white),
@@ -231,11 +355,12 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                             children: [
                               Text(
                                 review.patientName,
-                                style: Theme.of(context).textTheme.titleMedium,
+                                style:
+                                    Theme.of(context).textTheme.titleMedium,
                               ),
                               RatingBarIndicator(
                                 rating: review.rating,
-                                itemBuilder: (context, index) => Icon(
+                                itemBuilder: (context, index) => const Icon(
                                   Icons.star,
                                   color: Colors.amber,
                                 ),
@@ -247,9 +372,15 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
                         ),
                         Text(
                           DateFormat('MMM d, y').format(review.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                              ),
                         ),
                       ],
                     ),
@@ -285,17 +416,25 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: widget.doctor.availableSlots.map((day) => Chip(
-                label: Text(day),
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              )).toList(),
+              children: widget.doctor.availableSlots
+                  .map((day) => Chip(
+                        label: Text(day),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                      ))
+                  .toList(),
             )
           else
             Text(
               'No available slots',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
+                  ),
             ),
         ],
       ),

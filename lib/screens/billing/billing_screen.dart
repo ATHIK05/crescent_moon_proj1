@@ -190,7 +190,7 @@ class BillingScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.check_circle,
                       size: 16,
                       color: Colors.green,

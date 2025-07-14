@@ -8,7 +8,7 @@ class ConsultationProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<ConsultationModel> _consultations = [];
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _errorMessage;
 
   List<ConsultationModel> get consultations => _consultations;

@@ -157,24 +157,24 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         'label': 'Morning',
         'icon': Icons.wb_sunny,
         'color': Colors.orange,
-        'start': TimeOfDay(hour: 8, minute: 0),
-        'end': TimeOfDay(hour: 12, minute: 0),
+        'start': const TimeOfDay(hour: 8, minute: 0),
+        'end': const TimeOfDay(hour: 12, minute: 0),
       },
       {
         'key': 'evening',
         'label': 'Evening',
         'icon': Icons.wb_twilight,
         'color': Colors.deepPurple,
-        'start': TimeOfDay(hour: 14, minute: 0),
-        'end': TimeOfDay(hour: 18, minute: 0),
+        'start': const TimeOfDay(hour: 14, minute: 0),
+        'end': const TimeOfDay(hour: 18, minute: 0),
       },
       {
         'key': 'night',
         'label': 'Night',
         'icon': Icons.nightlight_round,
         'color': Colors.indigo,
-        'start': TimeOfDay(hour: 18, minute: 0),
-        'end': TimeOfDay(hour: 22, minute: 0),
+        'start': const TimeOfDay(hour: 18, minute: 0),
+        'end': const TimeOfDay(hour: 22, minute: 0),
       },
     ];
     List<String> getTimeChips(TimeOfDay start, TimeOfDay end) {
@@ -428,7 +428,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                             chips.add(label);
                           }
                           if (next.hour > end.hour ||
-                              (next.hour == end.hour && next.minute > end.minute)) break;
+                              (next.hour == end.hour && next.minute > end.minute)) {
+                            break;
+                          }
                           current = next;
                         }
                         return chips;
@@ -497,8 +499,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                                         onChanged: (val) {
                                           setState(() {
                                             slotEnabled[key] = val;
-                                            if (val) selectedSlotKey = key;
-                                            else if (selectedSlotKey == key) selectedSlotKey = null;
+                                            if (val) {
+                                              selectedSlotKey = key;
+                                            } else if (selectedSlotKey == key) selectedSlotKey = null;
                                             _selectedTimeSlot = null;
                                           });
                                         },

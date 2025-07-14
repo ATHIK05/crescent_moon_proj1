@@ -246,7 +246,7 @@ class _DoctorFilterScreenState extends State<DoctorFilterScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.star,
                                 color: Colors.amber,
                                 size: 16,

@@ -5,7 +5,7 @@ import '../../providers/family_provider.dart';
 import '../../widgets/custom_text_field.dart';
 
 class FamilyScreen extends StatelessWidget {
-  const FamilyScreen({Key? key}) : super(key: key);
+  const FamilyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +78,8 @@ class FamilyScreen extends StatelessWidget {
         floatingActionButton: Consumer<FamilyProvider>(
           builder: (context, provider, child) => FloatingActionButton(
             onPressed: () => _showAddEditDialog(context, provider),
-            child: const Icon(Icons.add),
             tooltip: 'Add Family Member',
+            child: const Icon(Icons.add),
           ),
         ),
       ),
